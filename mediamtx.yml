@@ -1,6 +1,5 @@
 # MediaMTX configuration for a V4L2 USB webcam on RK3399.
 # The selected camera emits H.264 natively, so no video is re-encoded.
-# Values beginning with $ are supplied by Docker environment variables.
 
 hlsVariant: lowLatency
 
@@ -9,9 +8,9 @@ paths:
     runOnInit: >-
       ffmpeg -hide_banner -loglevel warning
       -f v4l2
-      -framerate $CAMERA_FPS
-      -video_size $CAMERA_SIZE
-      -input_format $CAMERA_INPUT_FORMAT
+      -framerate 15
+      -video_size 1920x1080
+      -input_format h264
       -i /dev/camera
       -an
       -c:v copy
@@ -19,3 +18,6 @@ paths:
       -rtsp_transport tcp
       rtsp://127.0.0.1:$RTSP_PORT/$MTX_PATH
     runOnInitRestart: yes
+
+  # Published by the gesture-recognizer container.
+  gestures: {}

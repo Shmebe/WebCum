@@ -9,7 +9,27 @@ services:
       - ${CAMERA_DEVICE:-/dev/video5}:/dev/camera
     environment:
       MTX_WEBRTCADDITIONALHOSTS: ${SERVER_IP}
-      CAMERA_SIZE: ${CAMERA_SIZE:-1280x720}
-      CAMERA_FPS: ${CAMERA_FPS:-15}
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
+
+  gesture-recognizer:
+    build:
+      context: ./gesture-recognizer
+    container_name: rk3399-gesture-recognizer
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - camera-stream
+    devices:
+      # Used only for encoding the small annotated output stream.
+      - ${VPU_ENCODER_DEVICE_1:-/dev/video3}:/dev/video3
+      - ${VPU_ENCODER_DEVICE_2:-/dev/video4}:/dev/video4
+    environment:
+      RTSP_URL: rtsp://127.0.0.1:8554/cam
+      ANNOTATED_RTSP_URL: rtsp://127.0.0.1:8554/gestures
+      OPENCV_FFMPEG_CAPTURE_OPTIONS: rtsp_transport;tcp
+      ANALYSIS_FPS: ${ANALYSIS_FPS:-5}
+      MAX_WIDTH: ${ANALYSIS_MAX_WIDTH:-640}
+      GESTURE_MIN_SCORE: ${GESTURE_MIN_SCORE:-0.65}
+      ANNOTATED_VIDEO_CODEC: ${ANNOTATED_VIDEO_CODEC:-h264_v4l2m2m}
+    cpus: 1.0

@@ -5,7 +5,8 @@ It captures a V4L2 USB webcam that emits H.264 natively and publishes it
 through [MediaMTX](https://mediamtx.org/) without re-encoding.
 
 The browser endpoint uses WebRTC for low latency. No video is recorded and no
-object or gesture detection is enabled.
+object detection is enabled. A separate, resource-limited gesture-recognizer
+container tracks up to two hands and logs gesture events as JSON.
 
 ## Requirements
 
@@ -35,9 +36,9 @@ v4l2-ctl --list-devices
 v4l2-ctl -d /dev/video5 --list-formats-ext
 ```
 
-The defaults match the tested UVC camera: H.264 from `/dev/video5` at 1280x720
-and 15 FPS. Adjust `CAMERA_DEVICE`, `CAMERA_INPUT_FORMAT`, `CAMERA_SIZE`, and
-`CAMERA_FPS` in `.env` only if `v4l2-ctl` reports a different device or format.
+The defaults match the tested UVC camera: H.264 from `/dev/video5` at 1920x1080
+and 15 FPS. Change `CAMERA_DEVICE` in `.env` if needed. To change format,
+resolution, or frame rate, edit the matching values in `mediamtx.yml`.
 
 Start the stream:
 
@@ -45,6 +46,27 @@ Start the stream:
 docker compose up -d
 docker compose logs -f
 ```
+
+Watch recognized gesture events:
+
+```bash
+docker compose logs -f gesture-recognizer
+```
+
+View the annotated gesture stream, with hand landmarks, tracking points, and
+gesture labels drawn over the video:
+
+```text
+http://SERVER_IP:8889/gestures
+```
+
+The recognizer reads the local RTSP stream, downscales it to 640 px wide, and
+processes five frames per second by default. It publishes that annotated stream
+with the RK3399 VPU encoder. It recognizes `Closed_Fist`,
+`Open_Palm`, `Pointing_Up`, `Thumb_Up`, `Thumb_Down`, `Victory`, and `ILoveYou`.
+Each event also contains normalized wrist and index-finger-tip coordinates for
+tracking. Tune `ANALYSIS_FPS`, `ANALYSIS_MAX_WIDTH`, and `GESTURE_MIN_SCORE` in
+`.env` if needed; keep the defaults until CPU and Bluetooth audio are stable.
 
 Open this address from a device on the same LAN:
 
