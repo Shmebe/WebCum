@@ -1,8 +1,8 @@
 # RK3399 USB Camera Stream
 
 Minimal LAN-only live video streaming for an Armbian-based RK3399 device.
-It captures a V4L2 USB webcam, encodes H.264 through the Rockchip VPU, and
-publishes the result through [MediaMTX](https://mediamtx.org/).
+It captures a V4L2 USB webcam that emits H.264 natively and publishes it
+through [MediaMTX](https://mediamtx.org/) without re-encoding.
 
 The browser endpoint uses WebRTC for low latency. No video is recorded and no
 object or gesture detection is enabled.
@@ -11,7 +11,6 @@ object or gesture detection is enabled.
 
 - Armbian/Linux on RK3399, Docker Engine, and Docker Compose plugin.
 - A UVC webcam visible as a `/dev/video*` V4L2 device.
-- Rockchip VPU encoder nodes (usually `/dev/video3` and `/dev/video4`).
 - Ports `8554`, `8888`, and `8889` available on the server. Host networking is
   used so WebRTC and RTSP work reliably on the local network.
 
@@ -36,9 +35,9 @@ v4l2-ctl --list-devices
 v4l2-ctl -d /dev/video5 --list-formats-ext
 ```
 
-The defaults expect an MJPEG UVC stream from `/dev/video5` at 1280x720 and 15
-FPS. Adjust `CAMERA_DEVICE`, `CAMERA_INPUT_FORMAT`, `CAMERA_SIZE`, and
-`CAMERA_FPS` in `.env` to match the output above.
+The defaults match the tested UVC camera: H.264 from `/dev/video5` at 1280x720
+and 15 FPS. Adjust `CAMERA_DEVICE`, `CAMERA_INPUT_FORMAT`, `CAMERA_SIZE`, and
+`CAMERA_FPS` in `.env` only if `v4l2-ctl` reports a different device or format.
 
 Start the stream:
 
@@ -68,20 +67,6 @@ has higher latency than WebRTC.
 
 Set `CAMERA_INPUT_FORMAT` to one shown by `v4l2-ctl --list-formats-ext`.
 Typical values are `mjpeg`, `yuyv422`, and `h264`.
-
-### VPU encoder does not start
-
-Check that the VPU nodes exist and are mapped:
-
-```bash
-ls -l /dev/video3 /dev/video4
-docker compose logs camera-stream
-```
-
-If the container image's FFmpeg lacks a compatible RK3399 V4L2 encoder, the
-log will identify it. Do not silently fall back to `libx264`: on this host it
-can compete with Bluetooth audio. Use the native host FFmpeg build or add an
-RKMPP-enabled FFmpeg image instead.
 
 ### Browser page opens but playback fails
 
