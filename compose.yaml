@@ -1,0 +1,20 @@
+services:
+  camera-stream:
+    image: bluenviron/mediamtx:1-ffmpeg
+    container_name: rk3399-camera-stream
+    network_mode: host
+    restart: unless-stopped
+    devices:
+      # The USB webcam is always exposed under a stable name inside the container.
+      - ${CAMERA_DEVICE:-/dev/video5}:/dev/camera
+      # Rockchip RK3399 VPU encoder nodes.
+      - ${VPU_ENCODER_DEVICE_1:-/dev/video3}:/dev/video3
+      - ${VPU_ENCODER_DEVICE_2:-/dev/video4}:/dev/video4
+    environment:
+      MTX_WEBRTCADDITIONALHOSTS: ${SERVER_IP}
+      CAMERA_SIZE: ${CAMERA_SIZE:-1280x720}
+      CAMERA_FPS: ${CAMERA_FPS:-15}
+      CAMERA_INPUT_FORMAT: ${CAMERA_INPUT_FORMAT:-mjpeg}
+      VIDEO_BITRATE: ${VIDEO_BITRATE:-1500k}
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro

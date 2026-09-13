@@ -1,0 +1,22 @@
+# MediaMTX configuration for a V4L2 USB webcam on RK3399.
+# Values beginning with $ are supplied by Docker environment variables.
+
+hlsVariant: lowLatency
+
+paths:
+  cam:
+    runOnInit: >-
+      ffmpeg -hide_banner -loglevel warning
+      -f v4l2
+      -framerate $CAMERA_FPS
+      -video_size $CAMERA_SIZE
+      -input_format $CAMERA_INPUT_FORMAT
+      -i /dev/camera
+      -an
+      -c:v h264_v4l2m2m
+      -b:v $VIDEO_BITRATE
+      -g 30
+      -f rtsp
+      -rtsp_transport tcp
+      rtsp://127.0.0.1:$RTSP_PORT/$MTX_PATH
+    runOnInitRestart: yes
